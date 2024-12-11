@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 
+
 @Service
 public class SongServiceImpl implements SongService {
     private final SongRepository songRepository;
@@ -23,26 +24,48 @@ public class SongServiceImpl implements SongService {
 
     @Override
     public List<Song> listSongs() {
-        return songRepository.findAll();
+        return songRepository.findAll();  // Ги враќа сите песни
     }
 
     @Override
-    public Artist addArtistToSong(Artist artist, Song song) {
-        return songRepository.addArtistToSong(artist, song);
+    public void addArtistToSong(Artist artist, Long songId) {
+        // Наоѓа песна по ID
+        Optional<Song> songOptional = songRepository.findById(songId);
+        songOptional.ifPresent(song -> {
+            // Додава уметник на песната
+            song.addArtist(artist);
+            // Чува во базата
+            songRepository.save(song);
+        });
     }
 
     @Override
     public Song findByTrackId(Long trackId) {
-        return songRepository.findByTrackId(trackId);
+        // Наоѓа песна по trackId
+        return songRepository.findById(trackId).orElse(null);
     }
 
     @Override
-    public Optional<Song> save(String title, String genre, Integer releaseYear, Album album) {
-        return songRepository.save(title, genre, releaseYear, album);
+    public Song save(Song song) {
+        return songRepository.save(song);
     }
 
     @Override
     public void deleteById(Long id) {
-        this.songRepository.deleteById(id);
+        // Брише песна по ID
+        songRepository.deleteById(id);
+    }
+    @Override
+    public void update(Song song) {
+        songRepository.save(song);
+    }
+
+    @Override
+    public List<Song> findByAlbum(Album album) {
+        return songRepository.findByAlbum(album);
+    }
+
+    public Optional<Song> findByTitle(String title) {
+        return songRepository.findByTitle(title);
     }
 }

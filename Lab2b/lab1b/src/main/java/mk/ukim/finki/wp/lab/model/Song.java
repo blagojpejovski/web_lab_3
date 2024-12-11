@@ -23,11 +23,10 @@ public class Song {
     @ManyToMany
     private List<Artist> performers;
     @ManyToOne
+    @JoinColumn(name = "album_id")
     private Album album;
 
     public Song(String title, String genre, Integer releaseYear, Album album) {
-        this.trackId = (long) (Math.random()*1000);
-
         this.title = title;
         this.genre = genre;
         this.releaseYear = releaseYear;

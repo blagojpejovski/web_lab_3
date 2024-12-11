@@ -30,20 +30,36 @@ public class SongController {
     }
 
     @GetMapping("/songs")
-    public String getSongsPage(@RequestParam(required = false) String error, Model model){
-
+    public String getSongsPage(@RequestParam(required = false) String error, Model model) {
         if (error != null && !error.isEmpty()) {
             model.addAttribute("hasError", true);
             model.addAttribute("error", error);
         }
-
-
         model.addAttribute("songs", this.songService.listSongs());
         return "listSongs";
     }
 
+    @GetMapping("/songs/byAlbum")
+    public String getSongsByAlbum(@RequestParam(required = false) Long albumId, Model model) {
+        // Ако се избере албум, покажи ги песните од тој албум
+        if (albumId != null) {
+            Album album = albumService.findById(albumId).orElseThrow(() -> new InvalidAlbumIdException(albumId));
+            List<Song> songs = songService.findByAlbum(album);
+            model.addAttribute("album", album);
+            model.addAttribute("songs", songs);
+        }
+
+        // Земаме ги сите албуми за да ги прикажеме во select елементот
+        List<Album> albums = albumService.findAll();
+        model.addAttribute("albums", albums);
+
+        return "listSongsByAlbum";
+    }
+
+
+
     @GetMapping("/songs/add-form")
-    public String getAddSongPage(Model model){
+    public String getAddSongPage(Model model) {
         List<Artist> artists = this.artistService.listArtists();
         List<Album> albums = this.albumService.findAll();
         model.addAttribute("artists", artists);
@@ -56,31 +72,37 @@ public class SongController {
                            @RequestParam(required = false) Long trackId,
                            @RequestParam(required = false) String genre,
                            @RequestParam(required = false) Integer releaseYear,
-                           @RequestParam(required = false) Long albumId){
+                           @RequestParam(required = false) Long albumId) {
 
         Album album = albumService.findById(albumId).orElseThrow(() -> new InvalidAlbumIdException(albumId));
 
-        if(trackId == null){
-            this.songService.save(title, genre, releaseYear, album);
+        if (trackId == null) {
+            // За нова песна, создај ја песната и зачувај ја во базата
+            Song song = new Song(title, genre, releaseYear, album);
+            this.songService.save(song);
             return "redirect:/songs";
         }
 
+        // За постоечка песна, го наоѓаме по trackId
         Song song = this.songService.findByTrackId(trackId);
         song.setTitle(title);
         song.setGenre(genre);
         song.setReleaseYear(releaseYear);
         song.setAlbum(albumService.findById(albumId).orElseThrow(() -> new InvalidAlbumIdException(albumId)));
+
+        // Ажурирај ја песната во базата
+        this.songService.update(song);
         return "redirect:/songs";
     }
 
     @GetMapping("/songs/delete/{id}")
-    public String deleteSong(@PathVariable Long id){
+    public String deleteSong(@PathVariable Long id) {
         this.songService.deleteById(id);
         return "redirect:/songs";
     }
 
     @GetMapping("/songs/edit-form/{id}")
-    public String getEditSongForm(@PathVariable Long id, Model model){
+    public String getEditSongForm(@PathVariable Long id, Model model) {
         Song song = this.songService.findByTrackId(id);
         List<Artist> artists = this.artistService.listArtists();
         List<Album> albums = this.albumService.findAll();
@@ -90,17 +112,27 @@ public class SongController {
         return "add-song";
     }
 
-    @GetMapping("/songs/edit/{songId}")
+    @PostMapping("/songs/edit/{songId}")
     public String editSong(@PathVariable Long songId,
                            @RequestParam(required = false) String title,
                            @RequestParam(required = false) String genre,
                            @RequestParam(required = false) Integer releaseYear,
-                           @RequestParam(required = false) Long albumId){
+                           @RequestParam(required = false) Long albumId) {
         Song song = this.songService.findByTrackId(songId);
         song.setTitle(title);
         song.setGenre(genre);
         song.setReleaseYear(releaseYear);
         song.setAlbum(albumService.findById(albumId).orElseThrow(() -> new InvalidAlbumIdException(albumId)));
+
+        // Ажурирај ја песната во базата
+        this.songService.update(song);
+        return "redirect:/songs";
+    }
+
+    @PostMapping("/songs/add-artist")
+    public String addArtistToSong(@RequestParam Long songId, @RequestParam Long artistId) {
+        Artist artist = artistService.findById(artistId).orElseThrow();
+        songService.addArtistToSong(artist, songId);
         return "redirect:/songs";
     }
 }

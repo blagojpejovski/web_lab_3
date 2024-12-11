@@ -24,6 +24,16 @@ public class AlbumServiceImpl implements AlbumService {
 
     @Override
     public Optional<Album> findById(Long albumId) {
-        return albumRepository.findAlbumById(albumId);
+        return albumRepository.findById(albumId);
+    }
+
+    @Override
+    public Album save (Album album) {
+        return albumRepository.save(album);
+    }
+
+    public Optional<Album> findByName(String name) {
+        return albumRepository.findByName(name);
     }
 }
+

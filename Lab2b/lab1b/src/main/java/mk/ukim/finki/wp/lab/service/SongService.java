@@ -8,11 +8,18 @@ import java.util.List;
 import java.util.Optional;
 
 public interface SongService {
-    List<Song> listSongs();
-    Artist addArtistToSong(Artist artist, Song song);
-    Song findByTrackId(Long trackId);
+    List<Song> listSongs();  // Враќа список на сите песни
+    void addArtistToSong(Artist artist, Long songId);  // Додава уметник на песна
 
-    public Optional<Song> save(String title, String genre, Integer releaseYear, Album album);
+    Song findByTrackId(Long trackId);  // Наоѓа песна по trackId
 
-    void deleteById(Long id);
+   Song save(Song song);
+
+    void deleteById(Long id);  // Брише песна по ID
+    public void update(Song song);
+
+    public List<Song> findByAlbum(Album album);
+
+    Optional<Song> findByTitle(String title);
+
 }
